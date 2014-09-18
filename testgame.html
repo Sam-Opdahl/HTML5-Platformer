@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Testing</title>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+		<style>
+			canvas {
+				padding-left: 0;
+				padding-right: 0;
+				margin-left: auto;
+				margin-right: auto;
+				display: block;
+			}
+		</style>
+		
+	</head>
+
+	<body>
+		<canvas id="mainCanvas"></canvas>
+
+		<script src="sam-lib.js"></script>
+		<script>
+
+			var mainCanvas = document.getElementById("mainCanvas");
+			var context = mainCanvas.getContext("2d");
+
+			var isLoading = true;
+			var img;
+			var x = 500,
+				y = 500;
+
+
+			function initialize() {
+				img = new Image();
+				img.onload = function() {
+					isLoading = false;
+				};
+				img.src = "http://wallpaperscraft.com/image.php/79288/3840x2160.jpg";
+			}
+
+			function update() {
+				if (isKeyDown(Keys.LEFT)) {
+					x-=5;
+				} else if (isKeyDown(Keys.RIGHT)) {
+					x+=5;
+				}
+
+				if (isKeyDown(Keys.UP)) {
+					y-=5;
+				} else if(isKeyDown(Keys.DOWN)) {
+					y+=5;
+				}
+			}
+
+			function draw() {
+				context.fillStyle = "limegreen";
+				context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+				if (isLoading) {
+					context.fillStyle = "blue";
+					context.font = "20px Arial";
+					context.fillText("Loading", 100, 100	);
+				} else {
+					context.drawImage(img, x, y, 800, 480,  0, 0, 800, 480);
+				}
+			}
+
+		</script>
+	</body>
+</html>
