@@ -1,4 +1,3 @@
-
 var CANVAS_WIDTH = 800;
 var CANVAS_HEIGHT = 480;
 
@@ -117,8 +116,8 @@ window.requestAnimationFrame = (function() {
 
 var mainLoop = function() {
 	updateInput();
-	update();
-	draw();
+	Game.update();
+	Game.draw();
 
 	requestAnimationFrame(mainLoop);
 };
@@ -128,6 +127,6 @@ window.onload = function() {
 	mainCanvas.width = CANVAS_WIDTH;
 	mainCanvas.height = CANVAS_HEIGHT;
 
-	initialize();
+	Game.initialize();
 	requestAnimationFrame(mainLoop);
 };
