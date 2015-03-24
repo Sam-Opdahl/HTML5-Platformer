@@ -4,6 +4,7 @@ var Path = {
 	MAPS: "data/maps/"
 };
 
+//Enumerate the images that can be accessed when calling getImage() in AssetManager
 var ImageAsset = {
 	tile_set_1: 0,
 	tile_set_2: 1,
@@ -24,6 +25,8 @@ var ImageAsset = {
 	tile_set_4: 16
 };
 
+//Hold the number of submaps (maps that load when accessing a new part of the map, such as through a door).
+//For an index i of SUB_MAPS, SUB_MAPS[i] holds the number of submaps for a map i.
 var SUB_MAPS = [
 	3
 ];
@@ -31,6 +34,7 @@ var SUB_MAPS = [
 var HOME_WORLD_PREFIX = "home_";
 
 var AssetManager = (function() {
+	//A list of extra source file that need to be loaded
 	var SOURCE_FILES = [
 		"ScreenManager.js",
 		"Screen.js",
@@ -46,6 +50,7 @@ var AssetManager = (function() {
 		"Transition.js"
 	];
 
+	//Master list of images that are used in the game that need to be loaded
 	var IMAGE_PATH = [
 		"tileset1_v2.png",
 		"tileset2.png",
@@ -86,9 +91,7 @@ var AssetManager = (function() {
 	var load = function() {
 		//load remaining js source file
 		for (var i = 0; i < SOURCE_FILES.length; i++) {
-			$.getScript(SOURCE_FILES[i], function() {
-				onAssetLoaded();
-			});
+			$.getScript(SOURCE_FILES[i], onAssetLoaded);
 		}
 
 		//load image assets
@@ -106,20 +109,18 @@ var AssetManager = (function() {
 		//load map files
 		for (var i = 1; i <= MAP_COUNT; i++) {
 			for (var j = 0; j <= SUB_MAPS[i-1]; j++) {
-				$.getScript(Path.MAPS + i + "-" + j + ".js", function() {
-					onAssetLoaded();
-				});
+				$.getScript(Path.MAPS + i + "-" + j + ".js", onAssetLoaded);
 			}
 		}
 
 		//load home world map files
 		for (var i = 1; i <= HOME_WORLD_COUNT; i++) {
-			$.getScript(Path.MAPS + HOME_WORLD_PREFIX + i + ".js", function() {
-				onAssetLoaded();
-			});
+			$.getScript(Path.MAPS + HOME_WORLD_PREFIX + i + ".js", onAssetLoaded);
 		}
 	};
 
+	//Called whenever an asset is loaded. Checks if all assets are then loaded, and if so,
+	//calls the callback function set when load() was called.
 	var onAssetLoaded = function() {
 		assetsLoaded++;
 		if (assetsLoaded >= assetsToLoad) {

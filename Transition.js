@@ -51,7 +51,6 @@ Transition.prototype = {
 				}
 				break;
 			case TransitionType.FADE:
-				// return (this.state == TransitionState.IN) ? this.tColor.a <= 0 : this.tColor.a >= 1;
 				return (this.state == TransitionState.IN && this.tColor.a <= 0) || (this.state == TransitionState.OUT && this.tColor.a >= 1)
 				break;
 		}

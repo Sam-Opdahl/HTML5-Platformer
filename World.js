@@ -24,9 +24,6 @@ function World(gameScreen, currentWorld) {
 
 World.prototype = {
 
-	transitionOutSpeed: 6,
-	transitionInSpeed: 0.033,
-
 	initialize: function() {
 		this.loadMap(0);
 
@@ -39,8 +36,6 @@ World.prototype = {
 	},
 
 	update: function(screenNotTransitioning) {
-		//this.updateTransition();
-
 		if (this.transition != null) {
 			this.transition.update();
 			if (this.transition.isComplete()) {

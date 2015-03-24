@@ -120,9 +120,7 @@ Input = (function() {
 				realTouchPos = $.extend(true, [], e.touches);
 			}, false);
 
-			//prevent default behavior
 			window.addEventListener("click", function(e) { e.preventDefault(); }, false);
-			window.addEventListener("touchstart", function(e) { e.preventDefault(); }, false);
 		},
 
 		update: function() {
