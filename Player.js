@@ -1,4 +1,5 @@
 
+//Enumeration for the states a player can be in at any given time
 var PlayerState = {
 	JUMPING: 0,
 	WALKING: 1,
@@ -6,6 +7,7 @@ var PlayerState = {
 	CLIMBING: 3
 };
 
+//Defines which direction the player is currently facing
 var Direction = {
 	RIGHT: 0,
 	LEFT: 1
@@ -13,33 +15,49 @@ var Direction = {
 
 function Player(world, x, y) {
 	this.world = world;
+	//pass the start x and y position of the player
 	this.x = x;
 	this.y = y;
+
 	this.width = 16;
 	this.height = 24;
 
+	//tells us whether the player died (from falling, enemy, etc.)
 	this.isDead = false;
 
+	//hold the current speed the player is moving in the x and y directions respectively
 	this.xCurSpeed = 0;
 	this.yCurSpeed = 0;
+	//hold the current speed that the player is attempting to reach in the x and y directions respectively
+	//these will be used to update the CurSpeed variables above by using linear interpolation.
 	this.xTargetSpeed = 0;
 	this.yTargetSpeed = this.MAX_FALL_SPEED;
 
+	//hold the current direction we are moving on the y axis (if at all)
 	this.yDirection = -1;
+	//if jumping, hold the height that has been jumped at a given point in time (in pixels)
 	this.heightRisen = 0;
+	//hold the current player state. uses PlayerState enumeration as values
 	this.state = PlayerState.JUMPING;
 
+	//values used to animate player sprite
 	this.currentFrame = 0;
 	this.frameCounter = 0;
-	this.direction = 0;
+	this.direction = Direction.RIGHT;
 
+	//holds the position of the bottom of the player before updating y axis.
+	//this is used to properly handle colliding with one-way tiles.
 	this.previousBottom;
 
+	//flags that tell us whether we have collided with a tile (top of head or bottom of feet on land)
 	this.yTopCollisionOccurred = false;
 	this.yBottomCollisionOccurred = false;
+	//flags that tell us whether we have collided with a tile (while swimming; top or bottom of sprite)
 	this.waterTopCollisionOccurred = false;
 	this.waterBottomCollisionOccurred = false;
 
+	//if the player has collided with an enemy, these will hold the id of the enemy that has been collided with
+	//and which axis the collision occurred
 	this.enemyXCollision = -1;
 	this.enemyYCollision = -1;
 
@@ -52,6 +70,7 @@ Player.prototype = {
 
 	SPRITE_X_OFFSET: 2,
 	SPRITE_Y_OFFSET: 32,
+	//define the source rectangle on the sprite sheet of which sprite to draw on which animation frame
 	SPRITE_RECT: { 
 		0: new Rectangle(260, 192, 16, 24),
 		1: new Rectangle(260, 192, 16, 24),
@@ -71,6 +90,8 @@ Player.prototype = {
 	CLIMB_START_FRAME: 5,
 	MAX_CLIMB_FRAME: 6,
 	FRAME_TIME: 6,
+
+	//timer/counter for how long the player has to hold down left or right before they will move off the ladder
 	CLIMB_EXIT_TIME: 7,
 	climbExitCounter: 0,
 
@@ -95,14 +116,17 @@ Player.prototype = {
 	SWIM_RISE_ACCELERATION: 0.03,
 	MAX_SWIM_RISE_HEIGHT: 12,
 	
+	//jumpHeight holds the max/min jump height after jumping on enemy.
+	//the value updates with constant values below depending on if
+	//the player receives a jump boost or not.
 	jumpHeight: 50,
-	minJumpHeight: 20,
 	REGULAR_JUMP_HEIGHT: 50,
 	MIN_JUMP_HEIGHT: 20,
 	ENEMY_JUMP_HEIGHT: 53,
-	//give the player some time after hitting an enemy to jump
+	//timer that gives the player some time after hitting an enemy to jump
 	jumpPressTimer: 0,
 	MAX_JUMP_PRESS_TIME: 3,
+
 	spacePressedDuringJump: false,
 	jumpedOnEnemy: false,
 
@@ -135,11 +159,15 @@ Player.prototype = {
 				this.SPRITE_RECT[0].height - 16);
 	},
 
+	//collision rectangle 1 pixel below player, detects if the player is standing on a tile or not.
 	getBottomDetectionRect: function() {
 		var rect = this.getCollisionBox();
 		return new Rectangle(rect.x, rect.y + rect.height + this.BOTTOM_MARGIN, rect.width, 1);
 	},
 
+	//similar to getBottomDetectionRect() above, except is thinner than player and used to detect ladder collisions.
+	//the rectangle is thinner so that the player has to be closer to the middle of the ladder to climb down it,
+	//instead of being able to climb it if they are only 1 pixel on the x axis over it
 	getBottomLadderDetectRect: function() {
 		var rect = this.getCollisionBox();
 		return new Rectangle(rect.x + 4, rect.y + rect.height + this.BOTTOM_MARGIN, rect.width - 8, 1);
@@ -221,7 +249,7 @@ Player.prototype = {
 
 				//check if an x collision has occurred with an enemy
 				//if so, cause damage to player
-				if (this.enemyXCollision != -1) {
+				if (this.enemyXCollision != -1 && !this.jumpedOnEnemy) {
 					if (this.hurt()) {
 						this.handleEnemyXCollision();
 					}
@@ -292,7 +320,7 @@ Player.prototype = {
 							}
 						} else {
 							//jump boost was not successful (yet?), so set lower jump height limit
-							if (this.heightRisen >= this.minJumpHeight) {
+							if (this.heightRisen >= this.MIN_JUMP_HEIGHT) {
 								this.resetJumpValues();
 							}
 						}
@@ -301,7 +329,7 @@ Player.prototype = {
 				this.currentFrame = this.JUMP_FRAME_ID;
 
 				//check if player is attempting to climb a ladder.
-				//do not let the player climb while being pushed by and enemy.
+				//do not let the player climb while being pushed by an enemy.
 				if (Input.upHeld() && !this.isBeingPushed()) {
 					this.climb(this.checkLadderCollision(this.getLadderCollisionBox()));
 				}
@@ -340,25 +368,29 @@ Player.prototype = {
 					}
 				}
 
+				//if the player is moving, check if they walked off the edge or onto water
 				if (this.xCurSpeed != 0) {
 					var waterOnlyCollision = true;
+					//flag that tells us if the fall detection rectangle hasn't intersected with any tiles
 					var intersects = false;
 					var columns = this.getIntersectingColumns();
-					var startY = this.getLowBoundTile(this.getCollisionBox().bottom);
+					var row = this.getLowBoundTile(this.getCollisionBox().bottom);
 					var fallDetectRect = this.getBottomDetectionRect();
 
+					//loop through each column to make sure the player is standing on a tile
 					for (var i = 0; i < columns.length; i++) {
+						//do not attempt to check any out of bounds tiles
 						if (columns[i] >= map.mapData.width || columns[i] < 0 ||
-							startY >= map.mapData.height || startY < 0) {
+							row >= map.mapData.height || row < 0) {
 							continue;
 						}
-						var curTile = map.foregroundTiles[startY][columns[i]];
+						var curTile = map.foregroundTiles[row][columns[i]];
 						if (curTile.isActive()) {
 							if (fallDetectRect.intersects(curTile.getCollisionBox())) {
 								if (curTile.tileType != TileType.WATER) {
 									waterOnlyCollision = false;
 								}
-								if ((curTile.tileType == TileType.LADDER && map.foregroundTiles[startY - 1][columns[i]].tileType == TileType.LADDER)) {
+								if ((curTile.tileType == TileType.LADDER && map.foregroundTiles[row - 1][columns[i]].tileType == TileType.LADDER)) {
 									continue;
 								}
 								intersects = true;
@@ -834,7 +866,6 @@ Player.prototype = {
 	resetJumpValues: function() {
 		this.yTargetSpeed = this.MAX_FALL_SPEED;
 		this.jumpHeight = this.REGULAR_JUMP_HEIGHT;
-		this.minJumpHeight = this.MIN_JUMP_HEIGHT;
 		this.spacePressedDuringJump = false;
 		this.jumpedOnEnemy = false;
 	},
