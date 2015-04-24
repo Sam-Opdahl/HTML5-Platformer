@@ -338,6 +338,11 @@ Player.prototype = {
 
 			case PlayerState.WALKING:
 
+				var doorCollision = this.checkDoorCollision();
+				if (doorCollision) {
+					this.world.displayDoorInformation(doorCollision);
+				}
+
 				if (acceptInput) {
 					if (Input.jumpPressed()) {
 						this.yTargetSpeed = this.MAX_JUMP_SPEED;
@@ -350,7 +355,6 @@ Player.prototype = {
 						if (this.climb(this.checkLadderCollision(this.getLadderCollisionBox()))) {
 							break;
 						}
-						var doorCollision = this.checkDoorCollision();
 						if (doorCollision) {
 							this.world.transitionToMap(doorCollision);
 							break;

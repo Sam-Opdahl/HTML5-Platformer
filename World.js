@@ -129,14 +129,23 @@ World.prototype = {
 
 	formatMapId: function() {
 		return this.worldId + "-" + this.mapId;
-	}
+	},
+
+	displayDoorInformation: function(door) { }
 };
 
 
 // HomeWorld class ------------------------------------------------------------------------------------------------------------
 
-var HomeWorld = function (gameScreen, currentWorld) {
+var DOOR_POPUP_COLOR = new Color(0, 0, 0, 0.7);
+var DOOR_POPUP_WIDTH = 75;
+var DOOR_POPUP_HEIGHT = 125;
+var DOOR_POPUP_TOP_MARGIN = 10;
+var DOOR_POPUP_X = CANVAS_WIDTH / 2 - DOOR_POPUP_WIDTH;
+
+var HomeWorld = function(gameScreen, currentWorld) {
 	World.call(this, gameScreen, currentWorld);
+	this.doorInfoToDisplay = null
 }
 
 HomeWorld.inheritsFrom(World);
@@ -150,10 +159,23 @@ HomeWorld.prototype.transitionToMap = function(door) {
 	this.gameScreen.goToWorld(door.value);
 }
 
+HomeWorld.prototype.displayDoorInformation = function(door) {
+	this.doorInfoToDisplay = door.value;
+}
+
 HomeWorld.prototype.update = function(screenNotTransitioning) {
+	this.doorInfoToDisplay = null;
 	World.prototype.update.call(this, screenNotTransitioning);
 }
 
 HomeWorld.prototype.draw = function(context) {
 	World.prototype.draw.call(this, context);
+
+	if (this.doorInfoToDisplay != null) {
+		context.fillStyle = DOOR_POPUP_COLOR;
+		context.fillRect(DOOR_POPUP_X, DOOR_POPUP_TOP_MARGIN, DOOR_POPUP_WIDTH * 2, DOOR_POPUP_HEIGHT + DOOR_POPUP_TOP_MARGIN);
+		context.fillStyle = "white";
+		context.font = "11px Terminal";
+		context.fillText("Level " + this.doorInfoToDisplay, DOOR_POPUP_X + 10, DOOR_POPUP_TOP_MARGIN + 15);
+	}
 }
