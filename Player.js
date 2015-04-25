@@ -232,9 +232,7 @@ Player.prototype = {
 
 		var key = this.checkItemCollision();
 		if (key != null) {
-			var item = this.world.getCurrentMap().items[key];
-			this.world.collectedItems.push(key);
-			delete this.world.getCurrentMap().items[key];
+			this.world.onCollectItem(key);
 		}
 
 		switch (this.state) {
@@ -256,7 +254,7 @@ Player.prototype = {
 				}
 
 				//check if player jumped up (into) an enemy, and damage accordingly
-				if (this.enemyYCollision != -1 && this.yCurSpeed < 0) {
+				if (this.enemyYCollision != -1 && this.yCurSpeed < 0 && !this.jumpedOnEnemy) {
 					if (this.hurt()) {
 						this.yCurSpeed = this.MAX_FALL_SPEED / 2;
 						this.yTargetSpeed = this.MAX_FALL_SPEED;
@@ -882,6 +880,8 @@ Player.prototype = {
 		this.jumpHeight = this.ENEMY_JUMP_HEIGHT;
 		this.jumpedOnEnemy = true;
 		this.jumpPressTimer = 0;
+		//bump player up so if enemies are on top of each other, player won't collide with them.
+		this.y -= 2;
 	},
 
 	handleEnemyCollision: function(enemyIndex) {

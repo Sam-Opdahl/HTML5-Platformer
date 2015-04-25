@@ -342,38 +342,8 @@
                  "type":"item",
                  "visible":true,
                  "width":0,
-                 "x":208.212121212121,
-                 "y":207.484848484848
-                }, 
-                {
-                 "gid":1704,
-                 "height":0,
-                 "name":"",
-                 "properties":
-                    {
-
-                    },
-                 "rotation":0,
-                 "type":"item",
-                 "visible":true,
-                 "width":0,
-                 "x":224.060606060606,
-                 "y":207.454545454545
-                }, 
-                {
-                 "gid":1736,
-                 "height":0,
-                 "name":"",
-                 "properties":
-                    {
-
-                    },
-                 "rotation":0,
-                 "type":"item",
-                 "visible":true,
-                 "width":0,
-                 "x":240.060606060606,
-                 "y":207.393939393939
+                 "x":285.378787878788,
+                 "y":303.901515151515
                 }, 
                 {
                  "gid":1705,
@@ -387,8 +357,8 @@
                  "type":"item",
                  "visible":true,
                  "width":0,
-                 "x":224,
-                 "y":192
+                 "x":560.212121212121,
+                 "y":159.969696969697
                 }, 
                 {
                  "gid":1737,
@@ -402,8 +372,8 @@
                  "type":"item",
                  "visible":true,
                  "width":0,
-                 "x":240,
-                 "y":192
+                 "x":947.666666666667,
+                 "y":144
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -444,8 +414,8 @@
                  "type":"start",
                  "visible":true,
                  "width":0,
-                 "x":100.249999999997,
-                 "y":176
+                 "x":564.249999999997,
+                 "y":113.333333333333
                 }, 
                 {
                  "gid":1122,
@@ -685,11 +655,13 @@
                 },
              "1671":
                 {
-                 "obj_anim":"50,3,3,6,3,3"
+                 "obj_anim":"50,3,3,6,3,3",
+                 "val":"special_ruby"
                 },
              "1672":
                 {
-                 "obj_anim":"40,3,6,3"
+                 "obj_anim":"40,3,6,3",
+                 "val":"special_ruby"
                 },
              "168":
                 {
@@ -697,19 +669,23 @@
                 },
              "1703":
                 {
-                 "obj_anim":"50,3,3,6,3,3"
+                 "obj_anim":"50,3,3,6,3,3",
+                 "val":"special_emerald"
                 },
              "1704":
                 {
-                 "obj_anim":"40,3,6,3"
+                 "obj_anim":"40,3,6,3",
+                 "val":"special_emerald"
                 },
              "1735":
                 {
-                 "obj_anim":"50,3,3,6,3,3"
+                 "obj_anim":"50,3,3,6,3,3",
+                 "val":"special_sapphire"
                 },
              "1736":
                 {
-                 "obj_anim":"40,3,6,3"
+                 "obj_anim":"40,3,6,3",
+                 "val":"special_sapphire"
                 },
              "252":
                 {
@@ -797,7 +773,8 @@
                 },
              "841":
                 {
-                 "obj_anim":"40,5"
+                 "obj_anim":"40,5",
+                 "val":"coin_10"
                 },
              "86":
                 {
@@ -809,7 +786,8 @@
                 },
              "872":
                 {
-                 "obj_anim":"40,5"
+                 "obj_anim":"40,5",
+                 "val":"coin_3"
                 },
              "88":
                 {
@@ -967,7 +945,8 @@
             {
              "3211":
                 {
-                 "obj_anim":"40,5"
+                 "obj_anim":"40,5",
+                 "val":"coin_1"
                 }
             },
          "tilewidth":8

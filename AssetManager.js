@@ -47,7 +47,8 @@ var AssetManager = (function() {
 		"GameObject.js",
 		"Enemy.js",
 		"Animation.js",
-		"Transition.js"
+		"Transition.js",
+		"Constants.js"
 	];
 
 	//Master list of images that are used in the game that need to be loaded

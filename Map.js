@@ -181,12 +181,15 @@ Map.prototype = {
 							break;
 						case "item":						
 							var formattedId = this.formatItemId(itemId);
-							if (this.world.collectedItems.indexOf(formattedId) == -1) {
+							if (typeof(this.world.collectedItems[formattedId]) === "undefined") {
 								var animTimes = sourceSet.tileproperties[tileSheetLocation].obj_anim;
+								//check if the individual object on the map has a unique value. if not, attempt to give it a default value from the tileproperties. if no value found, it will be left blank.
+								var value = (obj.name != "" ? obj.name : (typeof(sourceSet.tileproperties[tileSheetLocation].val) !== "undefined" ? sourceSet.tileproperties[tileSheetLocation].val : ""));
+
 								if (typeof(animTimes) === "undefined") {
-									this.items[formattedId] = new GameObject(obj.type, obj.name, sourceImageId, sourceX, sourceY, Math.round(obj.x), Math.round(obj.y - sourceSet.tileheight), sourceSet.tilewidth);
+									this.items[formattedId] = new GameObject(obj.type, value, sourceImageId, sourceX, sourceY, Math.round(obj.x), Math.round(obj.y - sourceSet.tileheight), sourceSet.tilewidth);
 								} else {
-									this.items[formattedId] = new AnimatedGameObject(obj.type, obj.name, sourceImageId, sourceX, sourceY, 
+									this.items[formattedId] = new AnimatedGameObject(obj.type, value, sourceImageId, sourceX, sourceY, 
 										Math.round(obj.x), Math.round(obj.y - sourceSet.tileheight), sourceSet.tilewidth, $.map(animTimes.split(","), Number));
 								}
 							}
@@ -206,7 +209,7 @@ Map.prototype = {
 	},
 
 	formatItemId: function(id) {
-		return this.world.worldId + "-" + this.currentMap + "-" + id; 
+		return this.currentMap + "-" + id; 
 	},
 
 	getTileSource: function(tileSrc) {
