@@ -55,6 +55,9 @@ function Player(world, x, y) {
 	//flags that tell us whether we have collided with a tile (while swimming; top or bottom of sprite)
 	this.waterTopCollisionOccurred = false;
 	this.waterBottomCollisionOccurred = false;
+	this.ySpikeBottomCollision = false;
+	this.ySpikeTopCollision = false;
+	this.xSpikeCollision = false;
 
 	//if the player has collided with an enemy, these will hold the id of the enemy that has been collided with
 	//and which axis the collision occurred
@@ -157,6 +160,18 @@ Player.prototype = {
 				this.y + 16, 
 				this.SPRITE_RECT[0].width - 7 - 7, 
 				this.SPRITE_RECT[0].height - 16);
+	},
+
+	getSpikeCollisionBox: function() {
+		return new Rectangle(this.x + 7, 
+				this.y, 
+				this.SPRITE_RECT[0].width - 7 - 7, 
+				this.SPRITE_RECT[0].height);
+	},
+
+	getSpikeBottomDetectRect: function() {
+		var rect = this.getSpikeCollisionBox();
+		return new Rectangle(rect.x, rect.y + rect.height + this.BOTTOM_MARGIN, rect.width, 1);
 	},
 
 	//collision rectangle 1 pixel below player, detects if the player is standing on a tile or not.
@@ -265,8 +280,19 @@ Player.prototype = {
 				//Check if the player is falling
 				if (this.yTargetSpeed > 0) {
 					if (this.yBottomCollisionOccurred) {
-						this.state = PlayerState.WALKING;
-						this.resetAnimation();
+						if (this.ySpikeBottomCollision && !this.isHurt) {
+							this.hurt();
+							this.xCurSpeed = -this.xCurSpeed;
+							this.yTargetSpeed = this.MAX_JUMP_SPEED;
+							this.heightRisen = 25;
+						} else if (this.ySpikeTopCollision && !this.isHurt) {
+							this.hurt();
+							this.yTargetSpeed = this.MAX_FALL_SPEED;
+							this.yCurSpeed = this.MAX_FALL_SPEED * this.JUMP_BLOCK_HIT_DECELERATION;
+						} else { 
+							this.state = PlayerState.WALKING;
+							this.resetAnimation();
+						}
 					} else if (this.waterTopCollisionOccurred) {
 						this.yTargetSpeed = this.MAX_SWIM_FALL_SPEED;
 						if (this.yCurSpeed > this.yTargetSpeed) {
@@ -275,11 +301,18 @@ Player.prototype = {
 						this.state = PlayerState.SWIMMING;
 						this.resetAnimation();
 					}
+					if (this.xSpikeCollision && !this.isHurt) {
+						this.hurt();
+						this.xCurSpeed = -this.xTargetSpeed;
+					} 
 				//check if the player is jumping (upward)
 				} else {
 					if (this.yTopCollisionOccurred) {
 						//a collision on the top of the player occurred, set them as falling and push the player
 						//down a bit to prevent floating
+						if (this.ySpikeTopCollision && !this.isHurt) {
+							this.hurt();
+						}
 						this.yTargetSpeed = this.MAX_FALL_SPEED;
 						this.yCurSpeed = this.MAX_FALL_SPEED * this.JUMP_BLOCK_HIT_DECELERATION;
 					} else {
@@ -322,6 +355,10 @@ Player.prototype = {
 								this.resetJumpValues();
 							}
 						}
+					}
+					if (this.xSpikeCollision && !this.isHurt) {
+						this.hurt();
+						this.xCurSpeed = -this.xTargetSpeed;
 					}
 				}
 				this.currentFrame = this.JUMP_FRAME_ID;
@@ -375,9 +412,11 @@ Player.prototype = {
 					var waterOnlyCollision = true;
 					//flag that tells us if the fall detection rectangle hasn't intersected with any tiles
 					var intersects = false;
+					var hitSpike = false;
 					var columns = this.getIntersectingColumns();
 					var row = this.getLowBoundTile(this.getCollisionBox().bottom);
 					var fallDetectRect = this.getBottomDetectionRect();
+					var spikeDetectRect = this.getSpikeBottomDetectRect();
 
 					//loop through each column to make sure the player is standing on a tile
 					for (var i = 0; i < columns.length; i++) {
@@ -388,7 +427,8 @@ Player.prototype = {
 						}
 						var curTile = map.foregroundTiles[row][columns[i]];
 						if (curTile.isActive()) {
-							if (fallDetectRect.intersects(curTile.getCollisionBox())) {
+							var cb = curTile.getCollisionBox();
+							if (fallDetectRect.intersects(cb)) {
 								if (curTile.tileType != TileType.WATER) {
 									waterOnlyCollision = false;
 								}
@@ -397,7 +437,17 @@ Player.prototype = {
 								}
 								intersects = true;
 							}
+							if (spikeDetectRect.intersects(cb)) {
+								if (curTile.tileType == TileType.TOP_BOTTOM_SPIKE) {
+									hitSpike = true;
+								}
+							}
 						}
+					}
+
+					if (hitSpike && !this.isHurt) {
+						this.hurt();
+						this.xCurSpeed = -this.xTargetSpeed;
 					}
 
 					if (!intersects || waterOnlyCollision) {
@@ -414,6 +464,35 @@ Player.prototype = {
 						this.currentFrame = 0;
 					}
 				} else {
+
+					if (this.xSpikeCollision && !this.isHurt) {
+						this.hurt();
+						this.xCurSpeed = this.direction == Direction.RIGHT ? -this.MAX_SPEED : this.MAX_SPEED;
+					}
+
+					var columns = this.getIntersectingColumns();
+					var row = this.getLowBoundTile(this.getCollisionBox().bottom);
+					var spikeDetectRect = this.getSpikeBottomDetectRect();
+
+					for (var i = 0; i < columns.length; i++) {
+						if (columns[i] >= map.mapData.width || columns[i] < 0 ||
+							row >= map.mapData.height || row < 0) {
+							continue;
+						}
+						var curTile = map.foregroundTiles[row][columns[i]];
+						if (curTile.isActive()) {
+							if (spikeDetectRect.intersects(curTile.getCollisionBox())) {
+								if (curTile.tileType == TileType.TOP_BOTTOM_SPIKE) {
+									if (!this.isHurt) {
+										this.hurt();
+										this.xCurSpeed = this.direction == Direction.RIGHT ? -this.MAX_SPEED : this.MAX_SPEED;
+									}
+									break;
+								}
+							}
+						}
+					}
+
 					this.currentFrame = this.STAND_FRAME_ID;
 				}
 
@@ -587,6 +666,8 @@ Player.prototype = {
 			}
 		}
 
+		this.xSpikeCollision = false;
+
 		var hitTile = this.sideCollision(map, this.getUpperBoundTile(this.getCollisionBox().right) - 1);
 		if (hitTile != null) {
 			var collisionBox = hitTile.getCollisionBox();
@@ -617,6 +698,9 @@ Player.prototype = {
 					tile.tileType == TileType.WATER ||
 					tile.tileType == TileType.LADDER) {
 					continue;
+				}
+				if (tile.tileType == TileType.SIDE_SPIKE) {
+					this.xSpikeCollision = true;
 				}
 
 				if (this.getCollisionBox().intersects(tile.getCollisionBox())) {
@@ -691,6 +775,7 @@ Player.prototype = {
 
 	checkYCollision: function(map) {
 
+		//check enemy collisions in the y direction
 		this.enemyYCollision = -1;
 		var enemies = this.world.getCurrentMap().activeEnemies;
 		for (var i = 0; i < enemies.length; i++) {
@@ -700,15 +785,20 @@ Player.prototype = {
 			}
 		}
 
+		//reset collision flags
 		this.yTopCollisionOccurred = false;
 		this.yBottomCollisionOccurred = false;
 		this.waterTopCollisionOccurred = false;
 		this.waterBottomCollisionOccurred = false;
+		this.ySpikeBottomCollision = false;
+		this.ySpikeTopCollision = false;
+
 
 		var columns = this.getIntersectingColumns();
 		var waterTilesHit = 0;
 		var totalTilesHit = 0;
 
+		//first, check any collision on the bottom of the player's collision box (at their feet)
 		var startY = this.getLowBoundTile(this.getCollisionBox().bottom);
 		for (var i = 0; i < columns.length; i++) {
 			if (columns[i] >= map.mapData.width || columns[i] < 0 ||
@@ -732,6 +822,11 @@ Player.prototype = {
 					}
 					totalTilesHit++;
 				}
+				if (this.getSpikeCollisionBox().intersects(topTile.getCollisionBox())) {
+					if (topTile.tileType == TileType.TOP_BOTTOM_SPIKE) {
+						this.ySpikeBottomCollision = true;
+					}
+				}
 			} 
 		}
 
@@ -743,6 +838,7 @@ Player.prototype = {
 			}
 		}
 
+		//Next check and collisions at the top of the player's collision box (at the head)
 		startY = this.getUpperBoundTile(this.getCollisionBox().top) - 1;
 		waterTilesHit = 0;
 		totalTilesHit = 0;
@@ -765,6 +861,8 @@ Player.prototype = {
 					if (this.getCollisionBox().intersects(bottomTile.getCollisionBox())) {
 						if (bottomTile.tileType == TileType.WATER) {
 							waterTilesHit++;
+						} else if (bottomTile.tileType == TileType.TOP_BOTTOM_SPIKE) {
+							this.ySpikeTopCollision = true;
 						}
 						totalTilesHit++;
 					}
@@ -938,6 +1036,8 @@ Player.prototype = {
 
 	climb: function(tile, key) {
 		if (tile != null) {
+			//if player is standing on top of ladder, and climbs down, if they tap down fast enough they won't actually be on the ladder
+			//this will push them down so they will always be on the ladder if they press down on top of one.
 			if (Input.downHeld() && !Input.upHeld()) {
 				this.y += 1;
 			}
@@ -1018,7 +1118,7 @@ Player.prototype = {
 
 
 		// context.fillStyle = "rgba(0, 0, 255, 1)";
-		// var r = this.getDoorCollisionBox();
+		// var r = this.getSpikeBottomDetectRect();
 		// context.fillRect(r.x, r.y, r.width, r.height);
 
 		// context.fillStyle = "rgba(255, 0, 0, 1)";

@@ -28,7 +28,7 @@ var ImageAsset = {
 //Hold the number of submaps (maps that load when accessing a new part of the map, such as through a door).
 //For an index i of SUB_MAPS, SUB_MAPS[i] holds the number of submaps for a map i.
 var SUB_MAPS = [
-	3
+	4
 ];
 
 var HOME_WORLD_PREFIX = "home_";

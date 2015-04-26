@@ -70,6 +70,10 @@ function AnimatedGameObject(objectType, value, tileSheetId, sourceX, sourceY, de
 AnimatedGameObject.inheritsFrom(GameObject);
 
 AnimatedGameObject.prototype.update = function() {
+	if (!this.isActive) {
+		return;
+	}
+
 	if (++this.counter > this.animTimes[this.currentFrame]) {
 		this.counter = 0;
 		if (++this.currentFrame >= this.frameCount) {

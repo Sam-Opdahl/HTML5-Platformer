@@ -68,6 +68,14 @@ Map.prototype = {
 			this.bgParallax = this.mapData.properties.bgp.split(",");
 		}
 
+		if (typeof(this.mapData.properties.diamond) !== "undefined") {
+			this.world.diamondSubMapId = parseInt(this.mapData.properties.diamond);
+		} else {
+			if (mapId.endsWith("0")) {
+				console.log("warning: no diamond defined for this level!");
+			}
+		}
+
 		this.foregroundCanvas.width = this.backgroundCanvas.width = this.mapData.width * this.mapData.tilewidth;
 		this.foregroundCanvas.height = this.backgroundCanvas.height = this.mapData.height * this.mapData.tileheight;
 		this.foregroundContext = this.foregroundCanvas.getContext("2d");
@@ -192,6 +200,11 @@ Map.prototype = {
 									this.items[formattedId] = new AnimatedGameObject(obj.type, value, sourceImageId, sourceX, sourceY, 
 										Math.round(obj.x), Math.round(obj.y - sourceSet.tileheight), sourceSet.tilewidth, $.map(animTimes.split(","), Number));
 								}
+								if (this.items[formattedId].value.toString() == Constants.SPECIAL_ITEM_BLK_DIAMOND) {
+									if (!this.world.blackDiamondShown) {
+										this.items[formattedId].isActive = false;
+									}
+								}
 							}
 							itemId++;
 							break;
@@ -263,9 +276,13 @@ Map.prototype = {
 	},
 
 	update: function() {
+		this.updateScenery();
+		this.updateActiveEnemies();
+	},
+
+	updateScenery: function() {
 		this.updateAnimatedTiles();
 		this.updateObjects();
-		this.updateActiveEnemies();
 	},
 
 	updateActiveEnemies: function() {

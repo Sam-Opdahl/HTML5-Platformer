@@ -26,6 +26,25 @@ Camera.prototype = {
 		}
 	},
 
+	setManualCoordinates: function(x, y) {
+		var map = this.world.getCurrentMap();
+
+		if (map.getPixelWidth() > CANVAS_WIDTH) {
+			this.x = Math.min(0, -Math.round(x) + (CANVAS_WIDTH / 2));
+			this.x = Math.max(this.x, -(map.getPixelWidth() - CANVAS_WIDTH));
+			
+		} else {
+			this.x = (CANVAS_WIDTH - map.getPixelWidth()) / 2;
+		}
+
+		if (map.getPixelHeight() > CANVAS_HEIGHT) {
+			this.y = Math.min(0, -Math.round(y) + (CANVAS_HEIGHT / 2));
+			this.y = Math.max(this.y, -(map.getPixelHeight() - CANVAS_HEIGHT));
+		} else {
+			this.y = (CANVAS_HEIGHT - map.getPixelHeight()) / 2;
+		}
+	},
+
 	getCollisionRect: function() {
 		return new Rectangle(-this.x, -this.y, CANVAS_WIDTH, CANVAS_HEIGHT);
 	},

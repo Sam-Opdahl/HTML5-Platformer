@@ -18,7 +18,10 @@ var TileType = {
 	//when a player collides with this, water physics take effect.
 	WATER: 2,
 	//allows the player to 'grab' the tile and climb it
-	LADDER: 3
+	LADDER: 3,
+	//causes damage to player if they touch it
+	TOP_BOTTOM_SPIKE: 4,
+	SIDE_SPIKE: 5,
 };
 
 //Represents x/y collision offsets for certain tile types.

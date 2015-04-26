@@ -9,4 +9,8 @@ var Constants = {
 	SPECIAL_ITEM_EMERALD: "special_emerald",
 	SPECIAL_ITEM_RUBY: "special_ruby",
 
+	SPECIAL_ITEM_BLK_DIAMOND: "special_black_diamond",
+	BLACK_DIAMOND_UNLOCK: 10,
+	MAX_DIAMOND_VIEW_TIME: 100,
+
 };

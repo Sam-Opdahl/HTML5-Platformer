@@ -13,6 +13,13 @@ function World(gameScreen, currentWorld) {
 	this.coinTotal = 0;
 	this.specialItemsCollected = {};
 
+	this.diamondSubMapId;
+	this.diamondSubMap = null;
+	this.blackDiamondUnlocked = false;
+	this.blackDiamondObject = null;
+	this.findDiamondTransition = null;
+	this.diamondCounter = 0;
+
 	this.isTransitioningOffMap = false;
 	this.isTransitioningOnMap = false;
 	this.mapTransitionRect;
@@ -47,6 +54,7 @@ World.prototype = {
 					this.player.x = startPos[0];
 					this.player.y = startPos[1];
 					this.player.setStartValues();
+					this.camera.update();
 					this.getCurrentMap().spawnInitialEnemies();
 
 					this.transition = new Transition(TransitionState.IN, TransitionType.FADE, 0.01, null);
@@ -56,14 +64,46 @@ World.prototype = {
 			}
 		}
 
-		this.player.update(this.getCurrentMap(), screenNotTransitioning && (this.transition == null || (this.transition != null && this.transition.state == TransitionState.IN)));
-		this.getCurrentMap().update();
-		this.camera.update();
+		if (this.findDiamondTransition == null) {
+			this.player.update(this.getCurrentMap(), screenNotTransitioning && (this.transition == null || (this.transition != null && this.transition.state == TransitionState.IN)));
+			this.getCurrentMap().update();
+			this.camera.update();
+		} else {
+			this.findDiamondTransition.update();
+			if (this.findDiamondTransition.isComplete()) {
+				if (this.findDiamondTransition.state == TransitionState.OUT) {
+					if (!this.blackDiamondShown) {
+						var diamondCenter = this.blackDiamondObject.getCenter();
+						this.camera.setManualCoordinates(diamondCenter.x, diamondCenter.y);
+						if (this.diamondSubMap != null) {
+							this.diamondSubMap.spawnInitialEnemies();
+						}
+						this.findDiamondTransition = new Transition(TransitionState.IN, TransitionType.FADE, 0.01, null);
+						this.diamondCounter = 0;
+					} else {
+						this.findDiamondTransition = new Transition(TransitionState.IN, TransitionType.FADE, 0.01, null);
+						this.camera.update();
+					}
+				} else if (this.findDiamondTransition.state == TransitionState.IN) {
+					if (!this.blackDiamondShown) {
+						this.blackDiamondObject.isActive = true;
+						if (this.diamondCounter++ > Constants.MAX_DIAMOND_VIEW_TIME) {
+							this.findDiamondTransition = new Transition(TransitionState.OUT, TransitionType.FADE, 0.01, null);
+							this.blackDiamondShown = true;
+						}
+					} else {
+						this.findDiamondTransition = null;
+						this.diamondSubMap = null;
+					}
+				}
+			}
+			var map = this.isShowingSubMap() ? this.diamondSubMap : this.getCurrentMap();
+			map.updateScenery();
+		}	
 	},
 
 	draw: function(context) {
-
-		var map = this.getCurrentMap();
+		var map = this.isShowingSubMap() ? this.diamondSubMap : this.getCurrentMap();
 
 		if (map.backgrounds.length > 0) {
 			for (var i = 0; i < map.backgrounds.length; i++) {
@@ -87,7 +127,9 @@ World.prototype = {
 		context.drawImage(map.foregroundCanvas, 0, 0);
 
 		map.drawGameObjects(context);
-		this.player.draw(context);
+		if (!this.isShowingSubMap()) {
+			this.player.draw(context);
+		}
 
 		if (this.transition != null && this.transition.transitionType == TransitionType.ZOOM) {
 			this.transition.draw(context);
@@ -97,6 +139,10 @@ World.prototype = {
 
 		if (this.transition != null && this.transition.transitionType == TransitionType.FADE) {
 			this.transition.draw(context);
+		}
+
+		if (this.findDiamondTransition != null && this.findDiamondTransition.transitionType == TransitionType.FADE) {
+			this.findDiamondTransition.draw(context);
 		}
 
 		//Draw health bar
@@ -130,6 +176,10 @@ World.prototype = {
 			} else {
 				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 880, 16, 16, x, 15, 16, 16);
 			}
+			x -= 51;
+			if (this.specialItemsCollected[Constants.SPECIAL_ITEM_BLK_DIAMOND]) {
+				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 896, 16, 16, x, 15, 16, 16);
+			}
 		}
 	},
 
@@ -151,12 +201,17 @@ World.prototype = {
 			this.transition = new Transition(TransitionState.OUT, TransitionType.ZOOM, 4, door.getCenter());
 			this.player.xCurSpeed = 0;
 		} else {
-			//if the player collected the same or more number of special items, update their save.
-			//if the player collected less special items, we'll consider it as they did worse and leave their previous collected items in tact.
-			if (this.getSavedSpecialItemTotal() <= Object.keys(this.specialItemsCollected).length) {
-				localStorage.setItem(Constants.SPECIAL_ITEM_SAPPHIRE + this.worldId, typeof(this.specialItemsCollected[Constants.SPECIAL_ITEM_SAPPHIRE]) !== "undefined" ? 1 : 0);
-				localStorage.setItem(Constants.SPECIAL_ITEM_EMERALD + this.worldId, typeof(this.specialItemsCollected[Constants.SPECIAL_ITEM_EMERALD]) !== "undefined" ? 1 : 0);
-				localStorage.setItem(Constants.SPECIAL_ITEM_RUBY + this.worldId, typeof(this.specialItemsCollected[Constants.SPECIAL_ITEM_RUBY]) !== "undefined" ? 1 : 0);
+			if (typeof(this.specialItemsCollected[Constants.SPECIAL_ITEM_SAPPHIRE]) !== "undefined") {
+				localStorage.setItem(Constants.SPECIAL_ITEM_SAPPHIRE + this.worldId, 1);
+			}
+			if (typeof(this.specialItemsCollected[Constants.SPECIAL_ITEM_EMERALD]) !== "undefined") {
+				localStorage.setItem(Constants.SPECIAL_ITEM_EMERALD + this.worldId, 1);
+			}
+			if (typeof(this.specialItemsCollected[Constants.SPECIAL_ITEM_RUBY]) !== "undefined") {
+				localStorage.setItem(Constants.SPECIAL_ITEM_RUBY + this.worldId, 1);
+			}
+			if (typeof(this.specialItemsCollected[Constants.SPECIAL_ITEM_BLK_DIAMOND]) !== "undefined") {
+				localStorage.setItem(Constants.SPECIAL_ITEM_BLK_DIAMOND + this.worldId, 1);
 			}
 
 			var key = Constants.COIN_TOTAL_INDENTIFIER + this.worldId;
@@ -178,15 +233,48 @@ World.prototype = {
 
 	//Event for when the player collects a new items.
 	onCollectItem: function(key) {
-		var val = this.getCurrentMap().items[key].value.toString();
+		var map = this.getCurrentMap();
+		var val = map.items[key].value.toString();
 		if (val.startsWith(Constants.COIN_IDENTIFIER)) {
 			this.coinTotal += parseInt(val.substring(Constants.COIN_IDENTIFIER.length));
+
+			if (this.coinTotal >= Constants.BLACK_DIAMOND_UNLOCK && !this.blackDiamondUnlocked) {
+				//black diamond is located on current map
+				if (this.diamondSubMapId == this.mapId) {
+					this.blackDiamondUnlocked = true;
+					for (var i in map.items) {
+						if (map.items[i].value.toString() == Constants.SPECIAL_ITEM_BLK_DIAMOND) {
+							this.blackDiamondObject = map.items[i];
+							break;
+						}
+					}
+					this.findDiamondTransition = new Transition(TransitionState.OUT, TransitionType.FADE, 0.01, null);
+				//black diamond is located on another map. Load the other map to show a view of the diamond.
+				} else {
+					this.blackDiamondUnlocked = true;
+					this.diamondSubMap = new Map(this);
+					this.diamondSubMap.loadMap(this.worldId + "-" + this.diamondSubMapId);
+
+					for (var i in this.diamondSubMap.items) {
+						if (this.diamondSubMap.items[i].value.toString() == Constants.SPECIAL_ITEM_BLK_DIAMOND) {
+							this.blackDiamondObject = this.diamondSubMap.items[i];
+							break;
+						}
+					}
+					this.findDiamondTransition = new Transition(TransitionState.OUT, TransitionType.FADE, 0.01, null);
+				}
+			}
 		} else {
 			this.specialItemsCollected[val] = true;
 		}
 
-		this.collectedItems[key] = this.getCurrentMap().items[key];
-		delete this.getCurrentMap().items[key];
+		this.collectedItems[key] = map.items[key];
+		delete map.items[key];
+	},
+
+	isShowingSubMap: function() {
+		return (this.diamondSubMap != null && this.findDiamondTransition.state == TransitionState.IN && !this.blackDiamondShown) ||
+			(this.diamondSubMap != null && this.findDiamondTransition.state == TransitionState.OUT && this.blackDiamondShown);
 	},
 
 	getSavedCoinTotal: function(level) {
@@ -266,7 +354,7 @@ HomeWorld.prototype.draw = function(context) {
 		context.fillText("Level " + this.doorInfoToDisplay, x, y);
 		y += 15;
 		context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 88, 400, 8, 8, x, y, 8, 8);
-		context.fillText(this.levelInfoCoinTotal.toString(), x + 15, y + 8);
+		context.fillText("x " + this.levelInfoCoinTotal.toString(), x + 12, y + 7);
 
 		y += 20;
 		if (localStorage[Constants.SPECIAL_ITEM_SAPPHIRE + this.doorInfoToDisplay] == 1) {
@@ -285,6 +373,12 @@ HomeWorld.prototype.draw = function(context) {
 			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 832, 16, 16, x, y, 16, 16);
 		} else {
 			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 880, 16, 16, x, y, 16, 16);
+		}
+		x += 20;
+		if (localStorage[Constants.SPECIAL_ITEM_BLK_DIAMOND + this.doorInfoToDisplay] == 1) {
+			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 896, 16, 16, x, y, 16, 16);
+		} else {
+			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 160, 880, 16, 16, x, y, 16, 16);
 		}
 	}
 };
