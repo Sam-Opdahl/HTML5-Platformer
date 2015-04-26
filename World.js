@@ -44,6 +44,15 @@ World.prototype = {
 		this.getCurrentMap().spawnInitialEnemies();
 	},
 
+	setStartPos: function(startId) {
+		var pos = this.currentMap.getStartPosition(startId);
+		this.player.x = pos[0];
+		this.player.y = pos[1];
+
+		this.camera.update();
+		this.getCurrentMap().spawnInitialEnemies();
+	},
+
 	update: function(screenNotTransitioning) {
 		if (this.transition != null) {
 			this.transition.update();
@@ -214,17 +223,19 @@ World.prototype = {
 				localStorage.setItem(Constants.SPECIAL_ITEM_BLK_DIAMOND + this.worldId, 1);
 			}
 
+			localStorage.setItem(Constants.LEVEL_PASSED_ID + this.worldId.toString(), 1);
+
 			var key = Constants.COIN_TOTAL_INDENTIFIER + this.worldId;
 			if (typeof(localStorage[key]) === "undefined" || localStorage[key] < this.coinTotal) {
 				localStorage.setItem(key, this.coinTotal);
 			}
 
-			this.transitionToHomeWorld(door.value);
+			this.transitionToHomeWorld(door.value, this.worldId);
 		}
 	},
 
-	transitionToHomeWorld: function(id) {
-		this.gameScreen.goToWorld(id);
+	transitionToHomeWorld: function(id, startPos) {
+		this.gameScreen.goToWorld(id, startPos);
 	},
 
 	formatMapId: function() {
@@ -351,7 +362,15 @@ HomeWorld.prototype.draw = function(context) {
 
 		var x = DOOR_POPUP_X + 10;
 		var y = DOOR_POPUP_TOP_MARGIN + 15;
-		context.fillText("Level " + this.doorInfoToDisplay, x, y);
+		var levelText = "Level " + this.doorInfoToDisplay;
+		context.fillText(levelText, x, y);
+		if (localStorage[Constants.LEVEL_PASSED_ID + this.doorInfoToDisplay] == 1) {
+			context.fillStyle = "Chartreuse";
+			var px = x + context.measureText(levelText).width + 5;
+			context.fillText(Constants.LEVEL_PASSED_TEXT, px, y);
+			context.fillStyle = "white";
+		}
+
 		y += 15;
 		context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 88, 400, 8, 8, x, y, 8, 8);
 		context.fillText("x " + this.levelInfoCoinTotal.toString(), x + 12, y + 7);

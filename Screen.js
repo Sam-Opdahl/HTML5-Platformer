@@ -77,14 +77,16 @@ function GameScreen() {
 
 	this.transition = null;
 	this.worldIdToLoad = null;
+	this.startPos = 0;
 }
 
 GameScreen.inheritsFrom(Screen);
 
-GameScreen.prototype.goToWorld = function(id) {
+GameScreen.prototype.goToWorld = function(id, start) {
 	this.transition = new Transition(TransitionState.OUT, TransitionType.FADE, 0.01, null);
 	this.currentWorld.player.xCurSpeed = 0;
 	this.worldIdToLoad = id;
+	this.startPos = typeof(start) !== "undefined" ? start : 0;
 },
 
 GameScreen.prototype.update = function(otherScreenHasFocus, coveredByOtherScreen) {
@@ -99,6 +101,9 @@ GameScreen.prototype.update = function(otherScreenHasFocus, coveredByOtherScreen
 		if (this.transition.isComplete()) {
 			if (this.transition.state == TransitionState.OUT) {
 				this.currentWorld = this.worldIdToLoad.indexOf(HOME_WORLD_PREFIX) == -1 ? new World(this, this.worldIdToLoad) : new HomeWorld(this, this.worldIdToLoad);
+				if (this.startPos != 0) {
+					this.currentWorld.setStartPos(this.startPos);
+				}
 				this.transition = new Transition(TransitionState.IN, TransitionType.FADE, 0.01, null);
 			} else {
 				this.transition = null;

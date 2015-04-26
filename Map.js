@@ -261,6 +261,12 @@ Map.prototype = {
 	},
 
 	spawnInitialEnemies: function() {
+		//if we are re-spawning the initial enemies a second time for some reason,
+		//remove the first set of active enemies that may no longer be relevant.
+		for (var i = this.activeEnemies.length - 1; i >= 0; i--) {
+			this.removeActiveEnemy(i);
+		}
+
 		for (var i = this.inactiveEnemies.length - 1; i >= 0; i--) {
 			var enemy = this.inactiveEnemies[i];
 

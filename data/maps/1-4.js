@@ -89,6 +89,21 @@
                  "width":0,
                  "x":125,
                  "y":175.5
+                }, 
+                {
+                 "gid":842,
+                 "height":0,
+                 "name":"",
+                 "properties":
+                    {
+
+                    },
+                 "rotation":0,
+                 "type":"item",
+                 "visible":true,
+                 "width":0,
+                 "x":33.5,
+                 "y":137
                 }],
          "opacity":1,
          "type":"objectgroup",

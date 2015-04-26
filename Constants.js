@@ -13,4 +13,7 @@ var Constants = {
 	BLACK_DIAMOND_UNLOCK: 10,
 	MAX_DIAMOND_VIEW_TIME: 100,
 
+	LEVEL_PASSED_ID: "level_passed",
+	LEVEL_PASSED_TEXT: "Passed!",
+
 };
