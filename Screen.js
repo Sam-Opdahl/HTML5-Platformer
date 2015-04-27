@@ -73,7 +73,8 @@ function GameScreen() {
 	this.transitionOffTime = 0.05;
 	this.transitionOnTime = 0.03;
 
-	this.currentWorld = new World(this, 1);//new HomeWorld(this, "home_1");
+	this.currentWorld = new HomeWorld(this, "home_1");
+	// this.currentWorld = new World(this, "1");
 
 	this.transition = null;
 	this.worldIdToLoad = null;

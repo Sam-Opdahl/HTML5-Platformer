@@ -15,7 +15,7 @@ Game = (function() {
 	var rotateIconHeight = 288;
 
 	var onLoad = function() {
-		localStorage.clear();
+		// localStorage.clear();
 
 		// world = new HomeWorld("home_1");
 		ScreenManager.addScreen(new GameScreen());

@@ -27,6 +27,7 @@ function World(gameScreen, currentWorld) {
 	this.mapTransitionId;
 
 	this.transition = null;
+	this.finalDoorOpened = false;
 
 	this.initialize();
 }
@@ -75,7 +76,11 @@ World.prototype = {
 
 		if (this.findDiamondTransition == null) {
 			this.player.update(this.getCurrentMap(), screenNotTransitioning && (this.transition == null || (this.transition != null && this.transition.state == TransitionState.IN)));
-			this.getCurrentMap().update();
+			if (this.finalDoorOpened) {
+				this.getCurrentMap().updateScenery();
+			} else {
+				this.getCurrentMap().update();
+			}
 			this.camera.update();
 		} else {
 			this.findDiamondTransition.update();
@@ -210,6 +215,7 @@ World.prototype = {
 			this.transition = new Transition(TransitionState.OUT, TransitionType.ZOOM, 4, door.getCenter());
 			this.player.xCurSpeed = 0;
 		} else {
+			this.finalDoorOpened = true;
 			if (typeof(this.specialItemsCollected[Constants.SPECIAL_ITEM_SAPPHIRE]) !== "undefined") {
 				localStorage.setItem(Constants.SPECIAL_ITEM_SAPPHIRE + this.worldId, 1);
 			}
@@ -314,8 +320,8 @@ World.prototype = {
 // HomeWorld class ------------------------------------------------------------------------------------------------------------
 
 var DOOR_POPUP_COLOR = new Color(0, 0, 0, 0.7);
-var DOOR_POPUP_WIDTH = 75;
-var DOOR_POPUP_HEIGHT = 125;
+var DOOR_POPUP_WIDTH = 55;
+var DOOR_POPUP_HEIGHT = 80;
 var DOOR_POPUP_TOP_MARGIN = 10;
 var DOOR_POPUP_X = CANVAS_WIDTH / 2 - DOOR_POPUP_WIDTH;
 
@@ -325,6 +331,7 @@ var HomeWorld = function(gameScreen, currentWorld) {
 	this.doorInfoToDisplay = null
 	this.displayLevelInfo = false;
 	this.levelInfoCoinTotal = 0;
+	this.levelIsUnlocked = false;
 };
 
 HomeWorld.inheritsFrom(World);
@@ -335,7 +342,9 @@ HomeWorld.prototype.loadMap = function() {
 };
 
 HomeWorld.prototype.transitionToMap = function(door) {
-	this.gameScreen.goToWorld(door.value);
+	if (door.value == "1" || localStorage[Constants.LEVEL_PASSED_ID + (parseInt(door.value) - 1)] == 1) {
+		this.gameScreen.goToWorld(door.value);
+	}
 };
 
 HomeWorld.prototype.displayDoorInformation = function(door) {
@@ -343,6 +352,7 @@ HomeWorld.prototype.displayDoorInformation = function(door) {
 	if (this.doorInfoToDisplay != door.value) {
 		this.doorInfoToDisplay = door.value;
 		this.levelInfoCoinTotal = this.getSavedCoinTotal(door.value);
+		this.levelIsUnlocked = this.doorInfoToDisplay == "1" || localStorage[Constants.LEVEL_PASSED_ID + (parseInt(this.doorInfoToDisplay) - 1)] == 1;
 	}
 };
 
@@ -357,47 +367,57 @@ HomeWorld.prototype.draw = function(context) {
 	if (this.displayLevelInfo) {
 		context.fillStyle = DOOR_POPUP_COLOR;
 		context.fillRect(DOOR_POPUP_X, DOOR_POPUP_TOP_MARGIN, DOOR_POPUP_WIDTH * 2, DOOR_POPUP_HEIGHT + DOOR_POPUP_TOP_MARGIN);
-		context.fillStyle = "white";
-		context.font = "11px Terminal";
 
 		var x = DOOR_POPUP_X + 10;
 		var y = DOOR_POPUP_TOP_MARGIN + 15;
-		var levelText = "Level " + this.doorInfoToDisplay;
-		context.fillText(levelText, x, y);
-		if (localStorage[Constants.LEVEL_PASSED_ID + this.doorInfoToDisplay] == 1) {
-			context.fillStyle = "Chartreuse";
-			var px = x + context.measureText(levelText).width + 5;
-			context.fillText(Constants.LEVEL_PASSED_TEXT, px, y);
+		if (this.levelIsUnlocked) {
 			context.fillStyle = "white";
-		}
+			context.font = "11px Verdana";
+			var levelText = "Level " + this.doorInfoToDisplay;
+			context.fillText(levelText, x, y);
+			if (localStorage[Constants.LEVEL_PASSED_ID + this.doorInfoToDisplay] == 1) {
+				context.fillStyle = "Chartreuse";
+				var px = x + context.measureText(levelText).width + 5;
+				context.fillText(Constants.LEVEL_PASSED_TEXT, px, y);
+				context.fillStyle = "white";
+			}
 
-		y += 15;
-		context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 88, 400, 8, 8, x, y, 8, 8);
-		context.fillText("x " + this.levelInfoCoinTotal.toString(), x + 12, y + 7);
+			y += 15;
+			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 88, 400, 8, 8, x, y, 8, 8);
+			context.fillText("x " + this.levelInfoCoinTotal.toString(), x + 12, y + 7);
 
-		y += 20;
-		if (localStorage[Constants.SPECIAL_ITEM_SAPPHIRE + this.doorInfoToDisplay] == 1) {
-			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 128, 864, 16, 16, x, y, 16, 16);
+			y += 20;
+			if (localStorage[Constants.SPECIAL_ITEM_SAPPHIRE + this.doorInfoToDisplay] == 1) {
+				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 128, 864, 16, 16, x, y, 16, 16);
+			} else {
+				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 144, 880, 16, 16, x, y, 16, 16);
+			}
+			x += 20;
+			if (localStorage[Constants.SPECIAL_ITEM_EMERALD + this.doorInfoToDisplay] == 1) {
+				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 128, 848, 16, 16, x, y, 16, 16);
+			} else {
+				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 128, 880, 16, 16, x, y, 16, 16);
+			}
+			x += 20;
+			if (localStorage[Constants.SPECIAL_ITEM_RUBY + this.doorInfoToDisplay] == 1) {
+				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 832, 16, 16, x, y, 16, 16);
+			} else {
+				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 880, 16, 16, x, y, 16, 16);
+			}
+			x += 20;
+			if (localStorage[Constants.SPECIAL_ITEM_BLK_DIAMOND + this.doorInfoToDisplay] == 1) {
+				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 896, 16, 16, x, y, 16, 16);
+			} else {
+				context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 160, 880, 16, 16, x, y, 16, 16);
+			}
 		} else {
-			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 144, 880, 16, 16, x, y, 16, 16);
-		}
-		x += 20;
-		if (localStorage[Constants.SPECIAL_ITEM_EMERALD + this.doorInfoToDisplay] == 1) {
-			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 128, 848, 16, 16, x, y, 16, 16);
-		} else {
-			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 128, 880, 16, 16, x, y, 16, 16);
-		}
-		x += 20;
-		if (localStorage[Constants.SPECIAL_ITEM_RUBY + this.doorInfoToDisplay] == 1) {
-			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 832, 16, 16, x, y, 16, 16);
-		} else {
-			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 880, 16, 16, x, y, 16, 16);
-		}
-		x += 20;
-		if (localStorage[Constants.SPECIAL_ITEM_BLK_DIAMOND + this.doorInfoToDisplay] == 1) {
-			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 112, 896, 16, 16, x, y, 16, 16);
-		} else {
-			context.drawImage(AssetManager.getImage(ImageAsset.tile_set_1), 160, 880, 16, 16, x, y, 16, 16);
+			context.fillStyle = "white";
+			context.font = "11px Verdana";
+			context.fillText("Unknown Level", x+2, y);
+
+			context.fillStyle = "red";
+			context.font = "20px Verdana";
+			context.fillText("Locked", x+9, y+40);
 		}
 	}
 };

@@ -10,7 +10,7 @@ var Constants = {
 	SPECIAL_ITEM_RUBY: "special_ruby",
 
 	SPECIAL_ITEM_BLK_DIAMOND: "special_black_diamond",
-	BLACK_DIAMOND_UNLOCK: 10,
+	BLACK_DIAMOND_UNLOCK: 100,
 	MAX_DIAMOND_VIEW_TIME: 100,
 
 	LEVEL_PASSED_ID: "level_passed",
