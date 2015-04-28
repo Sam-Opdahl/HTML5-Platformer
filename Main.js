@@ -16,6 +16,7 @@ Game = (function() {
 
 	var onLoad = function() {
 		// localStorage.clear();
+		// localStorage.setItem(Constants.LEVEL_PASSED_ID + "1", 1);
 
 		// world = new HomeWorld("home_1");
 		ScreenManager.addScreen(new GameScreen());

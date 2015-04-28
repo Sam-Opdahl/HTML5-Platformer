@@ -26,9 +26,7 @@ Camera.prototype = {
 		}
 	},
 
-	setManualCoordinates: function(x, y) {
-		var map = this.world.getCurrentMap();
-
+	setManualCoordinates: function(x, y, map) {
 		if (map.getPixelWidth() > CANVAS_WIDTH) {
 			this.x = Math.min(0, -Math.round(x) + (CANVAS_WIDTH / 2));
 			this.x = Math.max(this.x, -(map.getPixelWidth() - CANVAS_WIDTH));

@@ -28,7 +28,8 @@ var ImageAsset = {
 //Hold the number of submaps (maps that load when accessing a new part of the map, such as through a door).
 //For an index i of SUB_MAPS, SUB_MAPS[i] holds the number of submaps for a map i.
 var SUB_MAPS = [
-	4
+	1,
+	1
 ];
 
 var HOME_WORLD_PREFIX = "home_";
@@ -72,7 +73,7 @@ var AssetManager = (function() {
 		"tileset4.png"
 	];
 
-	var MAP_COUNT = 1;
+	var MAP_COUNT = 2;
 	var HOME_WORLD_COUNT = 1;
 
 	var subMapCount = 0;

@@ -88,7 +88,7 @@ World.prototype = {
 				if (this.findDiamondTransition.state == TransitionState.OUT) {
 					if (!this.blackDiamondShown) {
 						var diamondCenter = this.blackDiamondObject.getCenter();
-						this.camera.setManualCoordinates(diamondCenter.x, diamondCenter.y);
+						this.camera.setManualCoordinates(diamondCenter.x, diamondCenter.y, this.diamondSubMap);
 						if (this.diamondSubMap != null) {
 							this.diamondSubMap.spawnInitialEnemies();
 						}
@@ -417,7 +417,7 @@ HomeWorld.prototype.draw = function(context) {
 
 			context.fillStyle = "red";
 			context.font = "20px Verdana";
-			context.fillText("Locked", x+9, y+40);
+			context.fillText("LOCKED", x+4, y+40);
 		}
 	}
 };
