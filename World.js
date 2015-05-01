@@ -88,7 +88,7 @@ World.prototype = {
 				if (this.findDiamondTransition.state == TransitionState.OUT) {
 					if (!this.blackDiamondShown) {
 						var diamondCenter = this.blackDiamondObject.getCenter();
-						this.camera.setManualCoordinates(diamondCenter.x, diamondCenter.y, this.diamondSubMap);
+						this.camera.setManualCoordinates(diamondCenter.x, diamondCenter.y, this.diamondSubMap == null ? this.getCurrentMap() : this.diamondSubMap);
 						if (this.diamondSubMap != null) {
 							this.diamondSubMap.spawnInitialEnemies();
 						}
