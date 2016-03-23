@@ -5,4 +5,4 @@ This project is meant to be a SNES-style platforming game which will be playable
 
 It is still being worked on, and many changes are still being made.
 
-Feel free to try the live demo [here](sam-opdahl.github.io).
+Feel free to try the live demo [here](http://sam-opdahl.github.io).
